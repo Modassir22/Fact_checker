@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased font-sans overflow-x-hidden min-h-screen selection:bg-blue-100 selection:text-blue-900;
+  }
+}
+
+/* Premium clean light borders and shadows (References) */
+.card-panel {
+  @apply bg-white border border-slate-200 rounded-2xl shadow-sm;
+  transition: all 0.2s ease-in-out;
+}
+
+.card-panel:hover {
+  @apply border-slate-300 shadow-md;
+}
+
+/* Custom premium scrollbars for light mode */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Custom styles for light-theme tables */
+.custom-table th {
+  @apply py-3 px-4 text-left text-xs font-bold text-slate-500 border-b border-slate-200 tracking-wider uppercase bg-slate-50/80;
+}
+
+.custom-table td {
+  @apply py-4 px-4 text-sm text-slate-700 border-b border-slate-100;
+}
+
+/* Faint background grid lines (Reference 2) */
+.grid-bg-mesh {
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  background-size: 3rem 3rem;
+}

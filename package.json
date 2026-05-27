@@ -1,0 +1,13 @@
+{
+  "name": "fact-checker-root",
+  "version": "1.0.0",
+  "description": "AI-Powered PDF Fact Verification Platform",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server",
+    "dev": "concurrently \"npm run dev --prefix client\" \"npm start --prefix server\"",
+    "start": "npm run dev"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
