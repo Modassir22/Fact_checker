@@ -33,9 +33,23 @@ ${text.slice(0, 20000)}
 
   if (geminiApiKey) {
     attempts.push({
-      name: 'Gemini 2.5 Flash',
+      name: 'Gemini 1.5 Flash',
       fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+        const response = await axios.post(url, {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        });
+        const jsonText = response.data.candidates[0].content.parts[0].text;
+        return JSON.parse(jsonText.trim());
+      }
+    });
+    attempts.push({
+      name: 'Gemini 2.0 Flash',
+      fn: async () => {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
         const response = await axios.post(url, {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {

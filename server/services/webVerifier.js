@@ -75,9 +75,26 @@ Return ONLY a valid JSON object matching this structure (no markdown formatting,
 
   if (geminiApiKey) {
     attempts.push({
-      name: 'Gemini 2.5 Flash',
+      name: 'Gemini 1.5 Flash',
       fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+        const response = await axios.post(url, {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        });
+        const text = response.data.candidates[0].content.parts[0].text;
+        const parsed = JSON.parse(cleanJsonResponse(text));
+        if (parsed.verdicts && Array.isArray(parsed.verdicts)) return parsed.verdicts;
+        if (Array.isArray(parsed)) return parsed;
+        throw new Error('Invalid JSON structure returned by Gemini');
+      }
+    });
+    attempts.push({
+      name: 'Gemini 2.0 Flash',
+      fn: async () => {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
         const response = await axios.post(url, {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
