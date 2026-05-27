@@ -26,10 +26,10 @@ app.use(cors({
     const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
     const isConfigured = allowedOrigins.includes(origin);
     
-    if (isVercel || isLocalhost || isConfigured || !process.env.FRONTEND_URL) {
+    if (isVercel || isLocalhost || isConfigured) {
       callback(null, true);
     } else {
-      callback(null, false);
+      callback(new Error('CORS not allowed'), false);
     }
   },
   methods: ['GET', 'POST', 'OPTIONS'],
@@ -139,3 +139,4 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
 });
+
