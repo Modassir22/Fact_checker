@@ -94,15 +94,12 @@ export default function App() {
       }
 
     } catch (apiError) {
+      clearInterval(progressInterval);
       const errMessage = `Verification Failed: ${apiError.message}. Make sure the backend server is running and your API keys in server/.env are active and funded.`;
-      localApiError = errMessage;
-
-      if (completedProgress) {
-        setStatus('IDLE');
-        setProgress(0);
-        setError(errMessage);
-        setTimeout(() => setError(null), 10000);
-      }
+      setStatus('IDLE');
+      setProgress(0);
+      setError(errMessage);
+      setTimeout(() => setError(null), 12000);
     }
   };
 
