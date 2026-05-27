@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "AI-Powered PDF Fact Verification Platform",
   "scripts": {
+    "postinstall": "npm install --prefix server",
     "install:all": "npm install && npm install --prefix client && npm install --prefix server",
     "dev": "concurrently \"npm run dev --prefix client\" \"npm start --prefix server\"",
-    "start": "npm run dev"
+    "start": "node server/server.js"
   },
   "dependencies": {
     "concurrently": "^8.2.2"
