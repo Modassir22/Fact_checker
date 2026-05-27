@@ -7,7 +7,8 @@ import TrustScoreGauge from './components/TrustScoreGauge';
 import { exportReportToPrint } from './utils/exportReport';
 import { FileText, Download, RotateCcw, ShieldCheck, AlertTriangle, XCircle, Info } from 'lucide-react';
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+let backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
+backendUrl = backendUrl.trim().replace(/\/$/, '');
 
 export default function App() {
   const [status, setStatus] = useState('IDLE');
