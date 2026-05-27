@@ -6,51 +6,75 @@
 
 @layer base {
   body {
-    @apply bg-neutral-950 text-neutral-100 antialiased font-sans overflow-x-hidden min-h-screen selection:bg-white selection:text-black;
+    @apply bg-white text-neutral-900 antialiased font-sans overflow-x-hidden min-h-screen selection:bg-black selection:text-white;
   }
 }
 
-/* Premium clean dark borders and shadows (References) */
+@layer utilities {
+  .border-neutral-850 {
+    border-color: #1f1f1f;
+  }
+  .border-neutral-855 {
+    border-color: #1b1b1b;
+  }
+  .border-neutral-750 {
+    border-color: #333333;
+  }
+  .text-neutral-550 {
+    color: #616161;
+  }
+  .text-neutral-450 {
+    color: #9e9e9e;
+  }
+  .text-neutral-350 {
+    color: #bcbcbc;
+  }
+  .bg-neutral-850 {
+    background-color: #202020;
+  }
+}
+
+/* Premium clean light borders and shadows (References) */
 .card-panel {
-  @apply bg-neutral-900/60 border border-neutral-850 rounded-2xl shadow-xl backdrop-blur-sm;
+  @apply bg-white border border-neutral-200 rounded-2xl shadow-sm backdrop-blur-sm;
   transition: all 0.2s ease-in-out;
 }
 
 .card-panel:hover {
-  @apply border-neutral-750 bg-neutral-900/80 shadow-2xl;
+  @apply border-neutral-300 bg-white/95 shadow-md;
 }
 
-/* Custom premium scrollbars for dark mode */
+/* Custom premium scrollbars for light mode */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: #ffffff;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #262626;
+  background: #e5e5e5;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #404040;
+  background: #d4d4d4;
 }
 
-/* Custom styles for dark-theme tables */
+/* Custom styles for light-theme tables */
 .custom-table th {
-  @apply py-3 px-4 text-left text-xs font-bold text-neutral-400 border-b border-neutral-800 tracking-wider uppercase bg-neutral-900/80;
+  @apply py-3 px-4 text-left text-xs font-bold text-neutral-500 border-b border-neutral-200 tracking-wider uppercase bg-neutral-50;
 }
 
 .custom-table td {
-  @apply py-4 px-4 text-sm text-neutral-300 border-b border-neutral-900;
+  @apply py-4 px-4 text-sm text-neutral-700 border-b border-neutral-100;
 }
 
 /* Faint background grid lines (Reference 2) */
 .grid-bg-mesh {
-  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-                    linear-gradient(to bottom, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
-  background-size: 3rem 3rem;
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.018) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(0, 0, 0, 0.018) 1px, transparent 1px);
+  background-size: 2.25rem 2.25rem;
 }

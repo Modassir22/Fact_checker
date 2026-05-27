@@ -9,6 +9,7 @@
     "start": "node server/server.js"
   },
   "dependencies": {
+    "agentation": "^3.0.2",
     "concurrently": "^8.2.2"
   }
 }

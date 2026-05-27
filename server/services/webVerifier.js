@@ -77,12 +77,9 @@ Return ONLY a valid JSON object matching this structure (no markdown formatting,
     attempts.push({
       name: 'Gemini 1.5 Flash (Custom)',
       fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
         const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json"
-          }
+          contents: [{ parts: [{ text: prompt }] }]
         });
         const text = response.data.candidates[0].content.parts[0].text;
         const parsed = JSON.parse(cleanJsonResponse(text));
@@ -96,10 +93,7 @@ Return ONLY a valid JSON object matching this structure (no markdown formatting,
       fn: async () => {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
         const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json"
-          }
+          contents: [{ parts: [{ text: prompt }] }]
         });
         const text = response.data.candidates[0].content.parts[0].text;
         const parsed = JSON.parse(cleanJsonResponse(text));
@@ -115,12 +109,9 @@ Return ONLY a valid JSON object matching this structure (no markdown formatting,
     attempts.push({
       name: 'Gemini 1.5 Flash (Env Fallback)',
       fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${envGeminiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${envGeminiKey}`;
         const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json"
-          }
+          contents: [{ parts: [{ text: prompt }] }]
         });
         const text = response.data.candidates[0].content.parts[0].text;
         const parsed = JSON.parse(cleanJsonResponse(text));
@@ -134,10 +125,7 @@ Return ONLY a valid JSON object matching this structure (no markdown formatting,
       fn: async () => {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${envGeminiKey}`;
         const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json"
-          }
+          contents: [{ parts: [{ text: prompt }] }]
         });
         const text = response.data.candidates[0].content.parts[0].text;
         const parsed = JSON.parse(cleanJsonResponse(text));
@@ -209,6 +197,7 @@ Return ONLY a valid JSON object matching this structure (no markdown formatting,
     });
   }
 
+  const attemptErrors = [];
   for (const attempt of attempts) {
     try {
       const verdicts = await attempt.fn();
@@ -216,11 +205,18 @@ Return ONLY a valid JSON object matching this structure (no markdown formatting,
         return verdicts;
       }
     } catch (err) {
+      const errMsg = err.response?.data?.error?.message || err.message;
+      attemptErrors.push(`${attempt.name} -> ${errMsg}`);
       lastError = err;
     }
   }
 
-  throw new Error(`AI Batch Claim Verification failed. Last error: ${lastError ? lastError.message : 'Unknown'}`);
+  if (attemptErrors.length > 0) {
+    const combinedErrors = attemptErrors.map(e => `• ${e}`).join('\n');
+    throw new Error(`AI Batch Claim Verification failed. Detailed operational logs:\n${combinedErrors}\n\n[Action Required]: Please check that your API keys are funded and correct.`);
+  }
+
+  throw new Error(`AI Batch Claim Verification failed. No LLM attempts were registered.`);
 }
 
 async function generateInsightsWithAI(fileName, trustScore, claims, geminiApiKey, openaiApiKey) {

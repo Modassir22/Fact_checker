@@ -1,5 +1,13 @@
 import axios from 'axios';
 
+function cleanJsonResponse(rawText) {
+  let cleaned = rawText.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(json)?/, '').replace(/```$/, '').trim();
+  }
+  return cleaned;
+}
+
 export async function extractClaimsWithAI(text, geminiApiKey, openaiApiKey) {
   if (!geminiApiKey && !openaiApiKey) {
     throw new Error('LLM API credentials (Gemini or OpenAI key) are required to extract claims from the uploaded file.');
@@ -35,15 +43,12 @@ ${text.slice(0, 20000)}
     attempts.push({
       name: 'Gemini 1.5 Flash (Custom)',
       fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
         const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json"
-          }
+          contents: [{ parts: [{ text: prompt }] }]
         });
         const jsonText = response.data.candidates[0].content.parts[0].text;
-        return JSON.parse(jsonText.trim());
+        return JSON.parse(cleanJsonResponse(jsonText));
       }
     });
     attempts.push({
@@ -51,13 +56,10 @@ ${text.slice(0, 20000)}
       fn: async () => {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
         const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json"
-          }
+          contents: [{ parts: [{ text: prompt }] }]
         });
         const jsonText = response.data.candidates[0].content.parts[0].text;
-        return JSON.parse(jsonText.trim());
+        return JSON.parse(cleanJsonResponse(jsonText));
       }
     });
   }
@@ -67,15 +69,12 @@ ${text.slice(0, 20000)}
     attempts.push({
       name: 'Gemini 1.5 Flash (Env Fallback)',
       fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${envGeminiKey}`;
+        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${envGeminiKey}`;
         const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json"
-          }
+          contents: [{ parts: [{ text: prompt }] }]
         });
         const jsonText = response.data.candidates[0].content.parts[0].text;
-        return JSON.parse(jsonText.trim());
+        return JSON.parse(cleanJsonResponse(jsonText));
       }
     });
     attempts.push({
@@ -83,13 +82,10 @@ ${text.slice(0, 20000)}
       fn: async () => {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${envGeminiKey}`;
         const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: "application/json"
-          }
+          contents: [{ parts: [{ text: prompt }] }]
         });
         const jsonText = response.data.candidates[0].content.parts[0].text;
-        return JSON.parse(jsonText.trim());
+        return JSON.parse(cleanJsonResponse(jsonText));
       }
     });
   }
@@ -155,6 +151,7 @@ ${text.slice(0, 20000)}
     });
   }
 
+  const attemptErrors = [];
   for (const attempt of attempts) {
     try {
       claims = await attempt.fn();
@@ -162,13 +159,15 @@ ${text.slice(0, 20000)}
         return claims;
       }
     } catch (err) {
+      const errMsg = err.response?.data?.error?.message || err.message;
+      attemptErrors.push(`${attempt.name} -> ${errMsg}`);
       lastError = err;
     }
   }
 
-  if (lastError && (geminiApiKey || openaiApiKey)) {
-    const apiErrMsg = lastError.response?.data?.error?.message || lastError.message;
-    throw new Error(`AI Claim Extraction failed. API Details: ${apiErrMsg}`);
+  if (attemptErrors.length > 0) {
+    const combinedErrors = attemptErrors.map(e => `• ${e}`).join('\n');
+    throw new Error(`AI Claim Extraction failed. Detailed operational logs:\n${combinedErrors}\n\n[Action Required]: Please verify your keys are funded/valid. Gemini API is highly recommended since Google AI Studio provides a free tier with 15 requests/min without billing.`);
   }
 
   try {

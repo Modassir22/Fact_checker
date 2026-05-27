@@ -118,13 +118,13 @@ export function ConfidenceLineChart({ chartData }) {
             <XAxis dataKey="name" stroke="#737373" fontSize={10} tickLine={false} axisLine={false} />
             <YAxis stroke="#737373" fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
             <Tooltip content={<CustomTooltip />} />
-            <Line 
-              type="monotone" 
-              dataKey="confidence" 
-              stroke="#ffffff" 
-              strokeWidth={3} 
+            <Line
+              type="monotone"
+              dataKey="confidence"
+              stroke="#ffffff"
+              strokeWidth={3}
               dot={{ r: 4, stroke: '#ffffff', strokeWidth: 1.5, fill: '#000000' }}
-              activeDot={{ r: 6 }} 
+              activeDot={{ r: 6 }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -150,24 +150,23 @@ export function ProblemAreasList({ areas }) {
         {areas.map((area, idx) => {
           const hasProblems = area.count > 0;
           return (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               className="p-3 rounded-xl border border-neutral-850 bg-neutral-950/40 hover:border-neutral-800 flex flex-col justify-between transition-all duration-200"
             >
               <div className="flex items-center justify-between gap-2 mb-2.5">
                 <span className="text-xs font-bold text-white capitalize tracking-wide">
                   {area.category}
                 </span>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                  hasProblems ? 'bg-neutral-800 text-neutral-200' : 'bg-neutral-950 text-neutral-550'
-                }`}>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${hasProblems ? 'bg-neutral-800 text-neutral-200' : 'bg-neutral-950 text-neutral-550'
+                  }`}>
                   {area.count} {area.count === 1 ? 'Error' : 'Errors'}
                 </span>
               </div>
               {/* Horizontal progress bar */}
               <div className="w-full bg-neutral-950 border border-neutral-850 rounded-full h-1.5 overflow-hidden">
-                <div 
-                  className="bg-white h-full rounded-full transition-all duration-500" 
+                <div
+                  className="bg-white h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(area.count * 25, 100)}%` }}
                 ></div>
               </div>

@@ -7,6 +7,7 @@ import TrustScoreGauge from './components/TrustScoreGauge';
 import { exportReportToPrint } from './utils/exportReport';
 import { FileText, Download, RotateCcw, ShieldCheck, AlertTriangle, XCircle, Info } from 'lucide-react';
 import SettingsModal from './components/SettingsModal';
+import { Agentation } from 'agentation';
 
 let backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 backendUrl = backendUrl.trim().replace(/\/$/, '');
@@ -117,35 +118,36 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between relative overflow-hidden bg-neutral-950 text-neutral-100 selection:bg-white selection:text-black">
-      
+    <div className="min-h-screen flex flex-col justify-between relative overflow-hidden bg-white text-black selection:bg-black selection:text-white">
+
       <div className="absolute inset-0 grid-bg-mesh pointer-events-none"></div>
 
       <Header isDashboard={status === 'DASHBOARD'} onOpenSettings={() => setIsSettingsOpen(true)} />
 
       <main className="max-w-7xl w-full mx-auto px-6 flex-1 flex flex-col justify-center relative z-10">
-        
+
         {(status === 'IDLE' || status === 'PARSING') ? (
-          <UploadArea 
+          <UploadArea
             onUpload={handleUploadPDF}
             status={status}
             error={error}
+            onClearError={() => setError(null)}
             progress={progress}
             fileName={fileName}
           />
         ) : status === 'ANALYZING' ? (
           <div className="py-6 space-y-6 relative h-[calc(100vh-180px)] overflow-hidden">
-            
-            <div className="fixed inset-0 bg-black/85 backdrop-blur-[4px] z-50 flex flex-col items-center justify-center gap-4 animate-fadeIn">
-              <div className="bg-neutral-900 border border-neutral-800 px-12 py-10 rounded-3xl shadow-2xl flex flex-col items-center gap-5 max-w-sm">
-                <div className="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-lg font-extrabold text-white tracking-tight text-center">Analyzing is loading...</span>
-                <span className="text-xs text-neutral-500 font-bold uppercase tracking-widest text-center">Checking live web data</span>
+
+            <div className="fixed inset-0 bg-white/90 backdrop-blur-[4px] z-50 flex flex-col items-center justify-center gap-4 animate-fadeIn">
+              <div className="bg-white border border-neutral-200 px-12 py-10 rounded-3xl shadow-lg flex flex-col items-center gap-5 max-w-sm">
+                <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-lg font-extrabold text-black tracking-tight text-center">Analyzing is loading...</span>
+                <span className="text-xs text-neutral-400 font-bold uppercase tracking-widest text-center">Checking live web data</span>
               </div>
             </div>
 
             <div className="opacity-40 pointer-events-none select-none animate-pulse space-y-6">
-              
+
               <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-sm flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="bg-slate-200 h-10 w-10 rounded-xl"></div>
@@ -217,7 +219,7 @@ export default function App() {
           </div>
         ) : (
           <div className="py-6 space-y-6 animate-fadeIn">
-            
+
             <div className="bg-neutral-900 border border-neutral-850 p-4.5 rounded-2xl shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="bg-neutral-950 p-2.5 rounded-xl text-white border border-neutral-850 shrink-0">
@@ -250,7 +252,7 @@ export default function App() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              
+
               <div className="bg-neutral-900 border border-neutral-855 rounded-xl p-5 text-white shadow-md flex flex-col justify-between h-[115px]">
                 <div className="flex items-center justify-between opacity-80 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
                   <span>Claims Audited</span>
@@ -325,17 +327,17 @@ export default function App() {
 
       </main>
 
-      <footer className="w-full py-6 border-t border-neutral-900 bg-neutral-950 z-10">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-neutral-550 tracking-wider uppercase font-bold">
+      <footer className="w-full py-6 border-t border-neutral-200 bg-white z-10">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[10px] text-neutral-500 tracking-wider uppercase font-bold">
           <span>Fact checker &copy; 2026</span>
           <span className="flex items-center gap-1">
-            <Info className="h-3 w-3 text-neutral-600" />
+            <Info className="h-3.5 w-3.5 text-neutral-400" />
             Empowered by Web Search AI Verification
           </span>
         </div>
       </footer>
 
-      <SettingsModal 
+      <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         config={config}
@@ -346,6 +348,7 @@ export default function App() {
           setConfig(newConfig);
         }}
       />
+      <Agentation />
     </div>
   );
 }

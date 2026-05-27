@@ -11,7 +11,7 @@ export default function TrustScoreGauge({ score }) {
     const animate = (now) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      
+
       // Easing out quadratic
       const ease = progress * (2 - progress);
       setAnimatedScore(Math.round(ease * score));
@@ -53,15 +53,15 @@ export default function TrustScoreGauge({ score }) {
   const strokeDashoffset = circumference - (animatedScore / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-neutral-900 border border-neutral-850 rounded-2xl shadow-xl text-center h-full min-h-[300px] text-white">
-      
+    <div className="flex flex-col items-center justify-center p-6 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-xl text-center h-full min-h-[300px] text-white">
+
       <span className="text-[10px] text-neutral-500 uppercase tracking-widest block font-bold mb-4">
         Overall Document Trust Score
       </span>
 
       {/* Circle Gauge SVG */}
       <div className="relative w-36 h-36 flex items-center justify-center mb-6">
-        
+
         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
           {/* Base track */}
           <circle
@@ -101,7 +101,7 @@ export default function TrustScoreGauge({ score }) {
         {verdict}
       </div>
 
-      <p className="text-xs text-neutral-450 max-w-[200px] leading-relaxed font-medium">
+      <p className="text-xs text-neutral-400 max-w-[200px] leading-relaxed font-medium">
         {description}
       </p>
 
