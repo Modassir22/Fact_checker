@@ -12,12 +12,26 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-let allowedOrigin = process.env.FRONTEND_URL || '*';
-if (allowedOrigin && allowedOrigin !== '*') {
-  allowedOrigin = allowedOrigin.replace(/\/$/, '');
+const allowedOrigins = [];
+if (process.env.FRONTEND_URL) {
+  process.env.FRONTEND_URL.split(',').forEach(url => {
+    allowedOrigins.push(url.trim().replace(/\/$/, ''));
+  });
 }
+
 app.use(cors({
-  origin: allowedOrigin,
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const isVercel = origin.endsWith('.vercel.app');
+    const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
+    const isConfigured = allowedOrigins.includes(origin);
+    
+    if (isVercel || isLocalhost || isConfigured || !process.env.FRONTEND_URL) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-gemini-key', 'x-openai-key', 'x-tavily-key']
 }));
