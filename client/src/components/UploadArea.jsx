@@ -67,28 +67,28 @@ export default function UploadArea({ onUpload, status, error, progress, fileName
         
         {(status === 'IDLE' || status === 'PARSING') && (
           <>
-            <div className="inline-block bg-slate-900 text-white text-[10px] font-bold tracking-wider px-3.5 py-1.5 rounded-full mb-6 uppercase shadow-sm">
+            <div className="inline-block bg-neutral-900 border border-neutral-800 text-neutral-300 text-[10px] font-bold tracking-wider px-3.5 py-1.5 rounded-full mb-6 uppercase shadow-sm">
               Effortless Verification, 95% Accurate
             </div>
 
-            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-2 font-sans">
+            <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-2 font-sans">
               Fact checker
             </h2>
-            <p className="text-slate-500 text-base md:text-lg mb-8 font-medium">
+            <p className="text-neutral-400 text-base md:text-lg mb-8 font-medium">
               Your One-Stop Solution
             </p>
 
             <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
-              <div className="bg-white border border-slate-200/80 rounded-xl px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2 text-xs font-semibold text-neutral-300 shadow-sm flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-neutral-650"></span>
                 Multi-format Processing
               </div>
-              <div className="bg-white border border-slate-200/80 rounded-xl px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2 text-xs font-semibold text-neutral-300 shadow-sm flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-neutral-650"></span>
                 Automated Workflow Integration
               </div>
-              <div className="bg-white border border-slate-200/80 rounded-xl px-4 py-2 text-xs font-semibold text-slate-700 shadow-sm flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+              <div className="bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-2 text-xs font-semibold text-neutral-300 shadow-sm flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-neutral-650"></span>
                 Advanced Data Extraction
               </div>
             </div>
@@ -99,20 +99,20 @@ export default function UploadArea({ onUpload, status, error, progress, fileName
               onDragOver={status === 'IDLE' ? handleDrag : undefined}
               onDragLeave={status === 'IDLE' ? handleDrag : undefined}
               onDrop={status === 'IDLE' ? handleDrop : undefined}
-              className={`w-full max-w-2xl mx-auto bg-[#1e1e21] rounded-2xl p-7 border-2 transition-all duration-300 shadow-xl ${
+              className={`w-full max-w-2xl mx-auto bg-neutral-900/40 rounded-2xl p-7 border transition-all duration-300 shadow-2xl ${
                 status === 'PARSING' 
                   ? 'opacity-80 cursor-default border-transparent' 
                   : dragActive 
-                    ? 'border-blue-500 scale-[1.01] cursor-pointer' 
-                    : 'border-transparent hover:bg-[#28282c] cursor-pointer'
+                    ? 'border-white scale-[1.01] cursor-pointer bg-neutral-900/80' 
+                    : 'border-neutral-800 hover:border-neutral-750 hover:bg-neutral-900/80 cursor-pointer'
               }`}
             >
-              <div className="border border-dashed border-slate-700 rounded-xl py-8 px-6 flex flex-col items-center justify-center gap-3">
-                <UploadCloud className="h-8 w-8 text-slate-200" />
+              <div className="border border-dashed border-neutral-800 rounded-xl py-8 px-6 flex flex-col items-center justify-center gap-3">
+                <UploadCloud className="h-8 w-8 text-neutral-400" />
                 <div className="text-sm font-bold text-white">
                   {status === 'PARSING' ? 'Processing file content...' : 'Click to upload or drag and drop'}
                 </div>
-                <div className="text-[11px] text-slate-400">
+                <div className="text-[11px] text-neutral-500">
                   Max file size 10MB &bull; PDF, DOCX, or TXT
                 </div>
               </div>
@@ -130,21 +130,21 @@ export default function UploadArea({ onUpload, status, error, progress, fileName
         )}
 
         {status === 'PARSING' && (
-          <div className="mt-8 w-full max-w-lg mx-auto bg-white border border-slate-200 rounded-3xl p-8 shadow-xl text-left animate-slideUp">
+          <div className="mt-8 w-full max-w-lg mx-auto bg-neutral-900 border border-neutral-800 rounded-3xl p-8 shadow-2xl text-left animate-slideUp">
             
-            <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 p-3 rounded-xl mb-6">
-              <div className="bg-slate-200/60 p-2 rounded-lg text-slate-750">
+            <div className="flex items-center gap-3 bg-neutral-950 border border-neutral-850 p-3 rounded-xl mb-6">
+              <div className="bg-neutral-800 p-2 rounded-lg text-white">
                 <FileText className="h-5 w-5" />
               </div>
               <div className="overflow-hidden">
-                <span className="text-xs font-bold text-slate-800 truncate block">{fileName}</span>
-                <span className="text-[9px] text-slate-400 uppercase tracking-widest block font-bold">Auditing document content...</span>
+                <span className="text-xs font-bold text-white truncate block">{fileName}</span>
+                <span className="text-[9px] text-neutral-500 uppercase tracking-widest block font-bold mt-0.5">Auditing document...</span>
               </div>
             </div>
 
-            <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden mb-6">
+            <div className="w-full bg-neutral-950 border border-neutral-850 h-2.5 rounded-full overflow-hidden mb-6">
               <div 
-                className="bg-slate-900 h-full rounded-full transition-all duration-300"
+                className="bg-white h-full rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
@@ -158,15 +158,15 @@ export default function UploadArea({ onUpload, status, error, progress, fileName
                   <div 
                     key={idx}
                     className={`flex items-center gap-3 text-xs transition-opacity duration-300 ${
-                      isDone ? 'text-slate-400 font-medium' : isCurrent ? 'text-slate-900 font-bold' : 'text-slate-300'
+                      isDone ? 'text-neutral-500 font-medium' : isCurrent ? 'text-white font-bold' : 'text-neutral-700'
                     }`}
                   >
                     {isDone ? (
-                      <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
                     ) : isCurrent ? (
-                      <RefreshCw className="h-4 w-4 text-slate-855 animate-spin shrink-0" />
+                      <RefreshCw className="h-4 w-4 text-white animate-spin shrink-0" />
                     ) : (
-                      <div className="h-4 w-4 rounded-full border border-slate-200 shrink-0 flex items-center justify-center text-[8px] font-bold text-slate-400">
+                      <div className="h-4 w-4 rounded-full border border-neutral-800 shrink-0 flex items-center justify-center text-[8px] font-bold text-neutral-600">
                         {idx + 1}
                       </div>
                     )}
@@ -180,8 +180,8 @@ export default function UploadArea({ onUpload, status, error, progress, fileName
         )}
 
         {error && (
-          <div className="mt-6 inline-flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 px-5 py-3.5 rounded-xl text-xs font-bold shadow-sm animate-slideUp">
-            <AlertCircle className="h-4.5 w-4.5 text-red-600 shrink-0" />
+          <div className="mt-6 inline-flex items-center gap-2.5 bg-neutral-900 border border-neutral-850 text-neutral-200 px-5 py-3.5 rounded-xl text-xs font-bold shadow-sm animate-slideUp">
+            <AlertCircle className="h-4.5 w-4.5 text-rose-500 shrink-0" />
             <span>{error}</span>
           </div>
         )}
