@@ -4,34 +4,21 @@ import multer from 'multer';
 import pdfParse from 'pdf-parse';
 import mammoth from 'mammoth';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { extractClaimsWithAI } from './services/claimExtractor.js';
 import { verifyClaimsWithAI } from './services/webVerifier.js';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const allowedOrigins = [];
-if (process.env.FRONTEND_URL) {
-  process.env.FRONTEND_URL.split(',').forEach(url => {
-    allowedOrigins.push(url.trim().replace(/\/$/, ''));
-  });
-}
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    const isVercel = origin.endsWith('.vercel.app');
-    const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
-    const isConfigured = allowedOrigins.includes(origin);
-    
-    if (isVercel || isLocalhost || isConfigured || !process.env.FRONTEND_URL) {
-      callback(null, true);
-    } else {
-      callback(null, false);
-    }
-  },
+  origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-gemini-key', 'x-openai-key', 'x-tavily-key']
 }));
