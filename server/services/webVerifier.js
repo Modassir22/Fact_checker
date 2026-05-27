@@ -177,6 +177,10 @@ export async function verifyClaimsWithAI(claims, geminiApiKey, openaiApiKey, tav
     try {
       batchVerdicts = await verifyClaimBatchWithAI(batchClaims, batchSearchResults, geminiApiKey, openaiApiKey);
     } catch (batchErr) {
+      if (geminiApiKey || openaiApiKey) {
+        const apiErrMsg = batchErr.response?.data?.error?.message || batchErr.message;
+        throw new Error(`AI Claim Verification failed. API Details: ${apiErrMsg}`);
+      }
       batchVerdicts = batchClaims.map((claim, idx) => {
         const localVerdict = verifyClaimHeuristically(claim, batchSearchResults[idx]);
         return {

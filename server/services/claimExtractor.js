@@ -103,6 +103,11 @@ ${text.slice(0, 20000)}
     }
   }
 
+  if (lastError && (geminiApiKey || openaiApiKey)) {
+    const apiErrMsg = lastError.response?.data?.error?.message || lastError.message;
+    throw new Error(`AI Claim Extraction failed. API Details: ${apiErrMsg}`);
+  }
+
   try {
     const localClaims = extractClaimsHeuristically(text);
     if (localClaims && localClaims.length > 0) {
