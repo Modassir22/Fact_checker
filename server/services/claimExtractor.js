@@ -33,7 +33,7 @@ ${text.slice(0, 20000)}
 
   if (geminiApiKey) {
     attempts.push({
-      name: 'Gemini 1.5 Flash',
+      name: 'Gemini 1.5 Flash (Custom)',
       fn: async () => {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
         const response = await axios.post(url, {
@@ -47,7 +47,7 @@ ${text.slice(0, 20000)}
       }
     });
     attempts.push({
-      name: 'Gemini 2.0 Flash',
+      name: 'Gemini 2.0 Flash (Custom)',
       fn: async () => {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
         const response = await axios.post(url, {
@@ -62,9 +62,41 @@ ${text.slice(0, 20000)}
     });
   }
 
+  const envGeminiKey = process.env.GEMINI_API_KEY;
+  if (envGeminiKey && envGeminiKey !== geminiApiKey) {
+    attempts.push({
+      name: 'Gemini 1.5 Flash (Env Fallback)',
+      fn: async () => {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${envGeminiKey}`;
+        const response = await axios.post(url, {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        });
+        const jsonText = response.data.candidates[0].content.parts[0].text;
+        return JSON.parse(jsonText.trim());
+      }
+    });
+    attempts.push({
+      name: 'Gemini 2.0 Flash (Env Fallback)',
+      fn: async () => {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${envGeminiKey}`;
+        const response = await axios.post(url, {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        });
+        const jsonText = response.data.candidates[0].content.parts[0].text;
+        return JSON.parse(jsonText.trim());
+      }
+    });
+  }
+
   if (openaiApiKey) {
     attempts.push({
-      name: 'OpenAI GPT-4o-mini',
+      name: 'OpenAI GPT-4o-mini (Custom)',
       fn: async () => {
         const response = await axios.post(
           'https://api.openai.com/v1/chat/completions',
@@ -79,6 +111,37 @@ ${text.slice(0, 20000)}
           {
             headers: {
               'Authorization': `Bearer ${openaiApiKey}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        const content = response.data.choices[0].message.content;
+        const parsed = JSON.parse(content.trim());
+        if (Array.isArray(parsed)) return parsed;
+        if (parsed.claims && Array.isArray(parsed.claims)) return parsed.claims;
+        throw new Error('Invalid response structure returned by OpenAI');
+      }
+    });
+  }
+
+  const envOpenaiKey = process.env.OPENAI_API_KEY;
+  if (envOpenaiKey && envOpenaiKey !== openaiApiKey) {
+    attempts.push({
+      name: 'OpenAI GPT-4o-mini (Env Fallback)',
+      fn: async () => {
+        const response = await axios.post(
+          'https://api.openai.com/v1/chat/completions',
+          {
+            model: 'gpt-4o-mini',
+            messages: [
+              { role: 'system', content: 'You are a precise claim extractor returning JSON.' },
+              { role: 'user', content: prompt }
+            ],
+            response_format: { type: 'json_object' }
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${envOpenaiKey}`,
               'Content-Type': 'application/json'
             }
           }

@@ -6,6 +6,7 @@ import { VerdictPieChart, RiskBarChart, ConfidenceLineChart, ProblemAreasList } 
 import TrustScoreGauge from './components/TrustScoreGauge';
 import { exportReportToPrint } from './utils/exportReport';
 import { FileText, Download, RotateCcw, ShieldCheck, AlertTriangle, XCircle, Info } from 'lucide-react';
+import SettingsModal from './components/SettingsModal';
 
 let backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 backendUrl = backendUrl.trim().replace(/\/$/, '');
@@ -16,6 +17,12 @@ export default function App() {
   const [fileName, setFileName] = useState('');
   const [error, setError] = useState(null);
   const [verificationData, setVerificationData] = useState(null);
+  const [config, setConfig] = useState({
+    geminiKey: localStorage.getItem('geminiKey') || '',
+    openaiKey: localStorage.getItem('openaiKey') || '',
+    tavilyKey: localStorage.getItem('tavilyKey') || ''
+  });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleUploadPDF = async (file, validationError) => {
     if (validationError) {
@@ -62,8 +69,14 @@ export default function App() {
       formData.append('pdf', file);
       formData.append('mode', 'live');
 
+      const headers = {};
+      if (config.geminiKey) headers['x-gemini-key'] = config.geminiKey;
+      if (config.openaiKey) headers['x-openai-key'] = config.openaiKey;
+      if (config.tavilyKey) headers['x-tavily-key'] = config.tavilyKey;
+
       const response = await fetch(`${backendUrl}/api/check`, {
         method: 'POST',
+        headers,
         body: formData
       });
 
@@ -111,7 +124,7 @@ export default function App() {
       
       <div className="absolute inset-0 grid-bg-mesh pointer-events-none"></div>
 
-      <Header isDashboard={status === 'DASHBOARD'} />
+      <Header isDashboard={status === 'DASHBOARD'} onOpenSettings={() => setIsSettingsOpen(true)} />
 
       <main className="max-w-7xl w-full mx-auto px-6 flex-1 flex flex-col justify-center relative z-10">
         
@@ -325,6 +338,17 @@ export default function App() {
         </div>
       </footer>
 
+      <SettingsModal 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        config={config}
+        onSave={(newConfig) => {
+          localStorage.setItem('geminiKey', newConfig.geminiKey);
+          localStorage.setItem('openaiKey', newConfig.openaiKey);
+          localStorage.setItem('tavilyKey', newConfig.tavilyKey);
+          setConfig(newConfig);
+        }}
+      />
     </div>
   );
 }
