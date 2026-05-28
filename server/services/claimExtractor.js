@@ -11,7 +11,7 @@ function cleanJsonResponse(rawText) {
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const FREE_TIER_MODELS = [
-  "gemini-2.5-flash-lite"
+  "gemini-2.5-flash-lite",
 ];
 
 async function callGeminiWithSDK(apiKey, prompt, modelName, name) {
@@ -71,7 +71,7 @@ async function callGeminiWithSDK(apiKey, prompt, modelName, name) {
   }
 }
 
-export async function extractClaimsWithAI(text, geminiApiKey, openaiApiKey) {
+export async function extractClaimsWithAI(text, geminiApiKey) {
   const keyToUse = geminiApiKey || process.env.GEMINI_API_KEY;
   if (!keyToUse) {
     throw new Error('LLM API credentials (Gemini API Key) are required to extract claims from the uploaded file.');

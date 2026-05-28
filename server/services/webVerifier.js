@@ -25,7 +25,7 @@ function cleanJsonResponse(rawText) {
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const FREE_TIER_MODELS = [
-  "gemini-2.5-flash-lite"
+  "gemini-2.5-flash-lite",
 ];
 
 async function callGeminiSDKVerify(apiKey, prompt, modelName, name) {
@@ -87,7 +87,7 @@ async function callGeminiSDKVerify(apiKey, prompt, modelName, name) {
   }
 }
 
-async function verifyClaimBatchWithAI(batchClaims, batchSearchResults, geminiApiKey, openaiApiKey) {
+async function verifyClaimBatchWithAI(batchClaims, batchSearchResults, geminiApiKey) {
   let claimsAndSourcesContext = '';
   batchClaims.forEach((claim, idx) => {
     const searchRes = batchSearchResults[idx] || [];
@@ -210,11 +210,11 @@ Return ONLY a valid JSON object matching this structure (no markdown formatting,
   throw new Error(`AI Batch Claim Verification failed. No LLM or heuristic attempts were successful.`);
 }
 
-async function generateInsightsWithAI(fileName, trustScore, claims, geminiApiKey, openaiApiKey) {
+async function generateInsightsWithAI(fileName, trustScore, claims, geminiApiKey) {
   return "Insights disabled.";
 }
 
-export async function verifyClaimsWithAI(claims, geminiApiKey, openaiApiKey, tavilyApiKey, fileName, textContent) {
+export async function verifyClaimsWithAI(claims, geminiApiKey, tavilyApiKey, fileName, textContent) {
   const claimResults = [];
   let verifiedCount = 0;
   let inaccurateCount = 0;
@@ -231,7 +231,7 @@ export async function verifyClaimsWithAI(claims, geminiApiKey, openaiApiKey, tav
 
     let batchVerdicts = [];
     try {
-      batchVerdicts = await verifyClaimBatchWithAI(batchClaims, batchSearchResults, geminiApiKey, openaiApiKey);
+      batchVerdicts = await verifyClaimBatchWithAI(batchClaims, batchSearchResults, geminiApiKey);
     } catch (batchErr) {
       batchVerdicts = batchClaims.map((claim, idx) => {
         const localVerdict = verifyClaimHeuristically(claim, batchSearchResults[idx]);
@@ -312,7 +312,7 @@ export async function verifyClaimsWithAI(claims, geminiApiKey, openaiApiKey, tav
     count: problemAreasMap[key]
   })).sort((a, b) => b.count - a.count);
 
-  const aiInsights = await generateInsightsWithAI(fileName, trustScore, claimResults, geminiApiKey, openaiApiKey);
+  const aiInsights = await generateInsightsWithAI(fileName, trustScore, claimResults, geminiApiKey);
 
   return {
     metadata: {

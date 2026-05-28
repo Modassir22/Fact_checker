@@ -17,7 +17,6 @@ This guide outlines how to deploy the client on **Vercel** and the server on **R
 4. Add the following **Environment Variables** under the Variables tab in Railway:
    - `PORT`: `5000` (Railway will assign this dynamically, Express handles it)
    - `GEMINI_API_KEY`: `AIzaSyDJNWOMN0b6R__FYZT_-zcn7IzYRy7I00g` (Or your active key)
-   - `OPENAI_API_KEY`: `sk-proj-fUTGeaz...` (Optional, if using OpenAI fallback)
    - `TAVILY_API_KEY`: `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`
 5. Railway will deploy and provide a public URL, e.g. `https://fact-checker-production.up.railway.app`.
 

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { X, Shield, Eye, EyeOff, Save, CheckCircle2, AlertCircle } from 'lucide-react';
+import { deobfuscateKey } from '../utils/security';
 
 export default function SettingsModal({ isOpen, onClose, config, onSave }) {
-  const [geminiKey, setGeminiKey] = useState(config.geminiKey || '');
-  const [tavilyKey, setTavilyKey] = useState(config.tavilyKey || '');
+  const [geminiKey, setGeminiKey] = useState('');
+  const [tavilyKey, setTavilyKey] = useState('');
   const [validationError, setValidationError] = useState('');
 
   const [showGemini, setShowGemini] = useState(false);
@@ -12,8 +13,8 @@ export default function SettingsModal({ isOpen, onClose, config, onSave }) {
 
   // Sync with prop when config changes
   useEffect(() => {
-    setGeminiKey(config.geminiKey || '');
-    setTavilyKey(config.tavilyKey || '');
+    setGeminiKey(config.geminiKey ? deobfuscateKey(config.geminiKey) : '');
+    setTavilyKey(config.tavilyKey ? deobfuscateKey(config.tavilyKey) : '');
     setValidationError('');
   }, [config, isOpen]);
 

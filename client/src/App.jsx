@@ -8,6 +8,7 @@ import { exportReportToPrint } from './utils/exportReport';
 import { FileText, Download, RotateCcw, ShieldCheck, AlertTriangle, XCircle, Info } from 'lucide-react';
 import SettingsModal from './components/SettingsModal';
 import { Agentation } from 'agentation';
+import { obfuscateKey, deobfuscateKey } from './utils/security';
 
 let backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
 backendUrl = backendUrl.trim().replace(/\/$/, '');
@@ -20,10 +21,17 @@ export default function App() {
   const [verificationData, setVerificationData] = useState(null);
   const [config, setConfig] = useState({
     geminiKey: localStorage.getItem('geminiKey') || '',
-    openaiKey: localStorage.getItem('openaiKey') || '',
     tavilyKey: localStorage.getItem('tavilyKey') || ''
   });
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [toast, setToast] = useState(null); // { message: string, type: 'success' | 'warning' | 'error' }
+
+  const showToastMessage = (message, type = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast(null);
+    }, 6000);
+  };
 
   const handleUploadPDF = async (file, validationError) => {
     if (validationError) {
@@ -33,6 +41,16 @@ export default function App() {
     }
 
     if (!file) return;
+
+    // Check custom keys - if not defined, limit to 2 free runs using system keys
+    const isUsingDefault = !config.geminiKey;
+    if (isUsingDefault) {
+      const runs = parseInt(localStorage.getItem('factcheck_sample_runs') || '0', 10);
+      if (runs >= 2) {
+        showToastMessage('You have exhausted your 2 free sample tests. Please add your own API keys in Settings to run further fact checks.', 'error');
+        return;
+      }
+    }
 
     setFileName(file.name);
     setError(null);
@@ -71,9 +89,8 @@ export default function App() {
       formData.append('mode', 'live');
 
       const headers = {};
-      if (config.geminiKey) headers['x-gemini-key'] = config.geminiKey;
-      if (config.openaiKey) headers['x-openai-key'] = config.openaiKey;
-      if (config.tavilyKey) headers['x-tavily-key'] = config.tavilyKey;
+      if (config.geminiKey) headers['x-gemini-key'] = deobfuscateKey(config.geminiKey);
+      if (config.tavilyKey) headers['x-tavily-key'] = deobfuscateKey(config.tavilyKey);
 
       const response = await fetch(`${backendUrl}/api/check`, {
         method: 'POST',
@@ -88,6 +105,12 @@ export default function App() {
 
       const data = await response.json();
       localApiData = data;
+
+      if (isUsingDefault) {
+        const currentRuns = parseInt(localStorage.getItem('factcheck_sample_runs') || '0', 10);
+        const newRuns = currentRuns + 1;
+        localStorage.setItem('factcheck_sample_runs', newRuns.toString());
+      }
 
       if (completedProgress) {
         setVerificationData(data);
@@ -141,7 +164,7 @@ export default function App() {
             <div className="fixed inset-0 bg-white/90 backdrop-blur-[4px] z-50 flex flex-col items-center justify-center gap-4 animate-fadeIn">
               <div className="bg-white border border-neutral-200 px-12 py-10 rounded-3xl shadow-lg flex flex-col items-center gap-5 max-w-sm">
                 <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin"></div>
-                <span className="text-lg font-extrabold text-black tracking-tight text-center">Analyzing is loading...</span>
+                <span className="text-lg font-extrabold text-black tracking-tight text-center">Analysis is loading...</span>
                 <span className="text-xs text-neutral-400 font-bold uppercase tracking-widest text-center">Checking live web data</span>
               </div>
             </div>
@@ -342,12 +365,40 @@ export default function App() {
         onClose={() => setIsSettingsOpen(false)}
         config={config}
         onSave={(newConfig) => {
-          localStorage.setItem('geminiKey', newConfig.geminiKey);
-          localStorage.setItem('openaiKey', newConfig.openaiKey);
-          localStorage.setItem('tavilyKey', newConfig.tavilyKey);
-          setConfig(newConfig);
+          const encGemini = obfuscateKey(newConfig.geminiKey);
+          const encTavily = obfuscateKey(newConfig.tavilyKey);
+          localStorage.setItem('geminiKey', encGemini);
+          localStorage.setItem('tavilyKey', encTavily);
+          setConfig({
+            geminiKey: encGemini,
+            tavilyKey: encTavily
+          });
         }}
       />
+      
+      {toast && (
+        <div className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-4 rounded-2xl border shadow-2xl backdrop-blur-md transition-all duration-300 max-w-md text-xs font-bold ${
+          toast.type === 'error' 
+            ? 'bg-rose-50 border-rose-200 text-rose-900 shadow-rose-100 animate-fadeIn' 
+            : toast.type === 'warning' 
+            ? 'bg-amber-50 border-amber-200 text-amber-900 shadow-amber-100 animate-fadeIn' 
+            : 'bg-emerald-50 border-emerald-200 text-emerald-900 shadow-emerald-100 animate-fadeIn'
+        }`}>
+          {toast.type === 'error' && <XCircle className="h-5 w-5 text-rose-600 shrink-0" />}
+          {toast.type === 'warning' && <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />}
+          {toast.type === 'success' && <ShieldCheck className="h-5 w-5 text-emerald-600 shrink-0" />}
+          <div className="flex flex-col gap-0.5 pr-2">
+            <span>{toast.message}</span>
+          </div>
+          <button 
+            onClick={() => setToast(null)}
+            className="ml-auto text-neutral-450 hover:text-neutral-700 transition-all font-bold text-lg pl-3"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <Agentation />
     </div>
   );

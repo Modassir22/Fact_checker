@@ -20,7 +20,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors({
   origin: `${process.env.FRONTEND_URL}`,
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-gemini-key', 'x-openai-key', 'x-tavily-key']
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-gemini-key', 'x-tavily-key']
 }));
 
 app.use(express.json());
@@ -58,7 +58,6 @@ app.post('/api/check', upload.single('pdf'), async (req, res) => {
     const mime = req.file.mimetype;
     
     const geminiApiKey = req.headers['x-gemini-key'] || process.env.GEMINI_API_KEY;
-    const openaiApiKey = req.headers['x-openai-key'] || process.env.OPENAI_API_KEY;
     const tavilyApiKey = req.headers['x-tavily-key'] || process.env.TAVILY_API_KEY;
 
     let textContent = '';
@@ -91,13 +90,13 @@ app.post('/api/check', upload.single('pdf'), async (req, res) => {
       });
     }
 
-    if (!geminiApiKey && !openaiApiKey) {
+    if (!geminiApiKey) {
       return res.status(400).json({ 
-        error: 'Either a Gemini API Key or an OpenAI API Key is required to extract and compare claims.' 
+        error: 'A Gemini API Key is required to extract and compare claims.' 
       });
     }
 
-    const claims = await extractClaimsWithAI(textContent, geminiApiKey, openaiApiKey);
+    const claims = await extractClaimsWithAI(textContent, geminiApiKey);
 
     if (claims.length === 0) {
       return res.status(400).json({ 
@@ -105,7 +104,7 @@ app.post('/api/check', upload.single('pdf'), async (req, res) => {
       });
     }
 
-    const verificationResults = await verifyClaimsWithAI(claims, geminiApiKey, openaiApiKey, tavilyApiKey, fileName, textContent);
+    const verificationResults = await verifyClaimsWithAI(claims, geminiApiKey, tavilyApiKey, fileName, textContent);
     
     return res.json(verificationResults);
 

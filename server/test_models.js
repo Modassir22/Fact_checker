@@ -22,13 +22,6 @@ async function checkModels() {
   } else {
     console.log("   - GEMINI_API_KEY: NOT FOUND in server/.env");
   }
-  
-  const openaiKey = process.env.OPENAI_API_KEY;
-  if (openaiKey) {
-    console.log(`   - OPENAI_API_KEY: Found (ending in ...${openaiKey.slice(-5)})`);
-  } else {
-    console.log("   - OPENAI_API_KEY: NOT FOUND in server/.env");
-  }
   console.log("");
 
   // Check Gemini Models
@@ -71,12 +64,6 @@ async function checkModels() {
   console.log("    - gemini-1.5-pro");
   console.log("      Rate Limits: 2 RPM | 50 RPD (Low daily limits, best for pro extractions)");
   console.log("      Cost: $0.00");
-  console.log("");
-  console.log(" B. OPENAI GPT FREE TIER");
-  console.log("    - OpenAI does NOT provide a true ongoing free-tier API.");
-  console.log("    - API usage requires a funded Developer account with pre-paid credits.");
-  console.log("    - If your credits are exhausted, OpenAI calls will fail with a 429 error.");
-  console.log("    - Recommended cheapest model if using paid OpenAI: 'gpt-4o-mini'");
   console.log("=============================================================");
 }
 
