@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { tavily } from '@tavily/core';
 
 async function searchWeb(query, apiKey) {
@@ -14,14 +14,87 @@ async function searchWeb(query, apiKey) {
   }
 }
 
+function cleanJsonResponse(rawText) {
+  let cleaned = rawText.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(json)?/, '').replace(/```$/, '').trim();
+  }
+  return cleaned;
+}
+
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const FREE_TIER_MODELS = [
+  "gemini-2.5-flash-lite"
+];
+
+async function callGeminiSDKVerify(apiKey, prompt, modelName, name) {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      maxOutputTokens: 1024,
+      temperature: 0.7
+    }
+  });
+
+  const maxRetries = 2;
+  let attempt = 0;
+
+  await wait(3000);
+
+  while (true) {
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const rawText = response.text();
+      const cleaned = cleanJsonResponse(rawText);
+
+      let parsed;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (parseErr) {
+        throw new Error(`JSON parse error: ${parseErr.message}. Raw response: ${rawText.slice(0, 200)}`);
+      }
+
+      if (parsed.verdicts && Array.isArray(parsed.verdicts)) return parsed.verdicts;
+      if (Array.isArray(parsed)) return parsed;
+      throw new Error('Invalid JSON structure returned by Gemini SDK');
+
+    } catch (err) {
+      attempt++;
+      const errMsg = err.message || "";
+      console.error(`[${name}] Batch Verification Attempt ${attempt} failed: ${errMsg}`);
+
+      if (errMsg.startsWith("JSON parse error")) {
+        throw err;
+      }
+
+      const isQuotaError =
+        errMsg.toLowerCase().includes("quota") ||
+        errMsg.toLowerCase().includes("429") ||
+        errMsg.toLowerCase().includes("exhausted") ||
+        errMsg.toLowerCase().includes("limit");
+
+      if (isQuotaError && attempt < maxRetries) {
+        console.warn(`[${name}] Quota exceeded. Waiting 60 seconds before retry ${attempt}/${maxRetries}...`);
+        await wait(60000);
+        continue;
+      }
+
+      throw err;
+    }
+  }
+}
+
 async function verifyClaimBatchWithAI(batchClaims, batchSearchResults, geminiApiKey, openaiApiKey) {
   let claimsAndSourcesContext = '';
   batchClaims.forEach((claim, idx) => {
     const searchRes = batchSearchResults[idx] || [];
-    const sourcesText = searchRes.map((res, sIdx) => 
-      `Source [${sIdx+1}] (${res.title}):\nURL: ${res.url}\nSnippet: ${res.content}\n`
+    const sourcesText = searchRes.map((res, sIdx) =>
+      `Source [${sIdx + 1}] (${res.title}):\nURL: ${res.url}\nSnippet: ${res.content}\n`
     ).join('\n');
-    
+
     claimsAndSourcesContext += `=========================================\nCLAIM ID: ${idx}\nCLAIM TEXT: "${claim}"\n\nLIVE SEARCH DATA:\n${sourcesText || 'No direct search results found.'}\n=========================================\n\n`;
   });
 
@@ -62,161 +135,79 @@ Return ONLY a valid JSON object matching this structure (no markdown formatting,
   ]
 }`;
 
-  let lastError = null;
+  // Build attempt list across all models
   const attempts = [];
-
-  const cleanJsonResponse = (rawText) => {
-    let cleaned = rawText.trim();
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```(json)?/, '').replace(/```$/, '').trim();
-    }
-    return cleaned;
-  };
-
-  if (geminiApiKey) {
-    attempts.push({
-      name: 'Gemini 1.5 Flash (Custom)',
-      fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
-        const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }]
-        });
-        const text = response.data.candidates[0].content.parts[0].text;
-        const parsed = JSON.parse(cleanJsonResponse(text));
-        if (parsed.verdicts && Array.isArray(parsed.verdicts)) return parsed.verdicts;
-        if (Array.isArray(parsed)) return parsed;
-        throw new Error('Invalid JSON structure returned by Gemini');
-      }
-    });
-    attempts.push({
-      name: 'Gemini 2.0 Flash (Custom)',
-      fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
-        const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }]
-        });
-        const text = response.data.candidates[0].content.parts[0].text;
-        const parsed = JSON.parse(cleanJsonResponse(text));
-        if (parsed.verdicts && Array.isArray(parsed.verdicts)) return parsed.verdicts;
-        if (Array.isArray(parsed)) return parsed;
-        throw new Error('Invalid JSON structure returned by Gemini');
-      }
-    });
-  }
-
   const envGeminiKey = process.env.GEMINI_API_KEY;
-  if (envGeminiKey && envGeminiKey !== geminiApiKey) {
-    attempts.push({
-      name: 'Gemini 1.5 Flash (Env Fallback)',
-      fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${envGeminiKey}`;
-        const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }]
-        });
-        const text = response.data.candidates[0].content.parts[0].text;
-        const parsed = JSON.parse(cleanJsonResponse(text));
-        if (parsed.verdicts && Array.isArray(parsed.verdicts)) return parsed.verdicts;
-        if (Array.isArray(parsed)) return parsed;
-        throw new Error('Invalid JSON structure returned by Gemini');
-      }
-    });
-    attempts.push({
-      name: 'Gemini 2.0 Flash (Env Fallback)',
-      fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${envGeminiKey}`;
-        const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }]
-        });
-        const text = response.data.candidates[0].content.parts[0].text;
-        const parsed = JSON.parse(cleanJsonResponse(text));
-        if (parsed.verdicts && Array.isArray(parsed.verdicts)) return parsed.verdicts;
-        if (Array.isArray(parsed)) return parsed;
-        throw new Error('Invalid JSON structure returned by Gemini');
-      }
-    });
+
+  for (const modelName of FREE_TIER_MODELS) {
+    if (geminiApiKey) {
+      attempts.push({
+        name: `${modelName} (Custom Key)`,
+        fn: () => callGeminiSDKVerify(geminiApiKey, prompt, modelName, `${modelName} (Custom Key)`)
+      });
+    }
+    if (envGeminiKey && envGeminiKey !== geminiApiKey) {
+      attempts.push({
+        name: `${modelName} (Env Fallback)`,
+        fn: () => callGeminiSDKVerify(envGeminiKey, prompt, modelName, `${modelName} (Env Fallback)`)
+      });
+    }
   }
 
-  if (openaiApiKey) {
-    attempts.push({
-      name: 'OpenAI GPT-4o-mini (Custom)',
-      fn: async () => {
-        const response = await axios.post(
-          'https://api.openai.com/v1/chat/completions',
-          {
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: 'You are an accurate fact-checking expert returning JSON.' },
-              { role: 'user', content: prompt }
-            ],
-            response_format: { type: 'json_object' }
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${openaiApiKey}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        const text = response.data.choices[0].message.content;
-        const parsed = JSON.parse(cleanJsonResponse(text));
-        if (parsed.verdicts && Array.isArray(parsed.verdicts)) return parsed.verdicts;
-        if (Array.isArray(parsed)) return parsed;
-        throw new Error('Invalid JSON structure returned by OpenAI');
-      }
-    });
-  }
-
-  const envOpenaiKey = process.env.OPENAI_API_KEY;
-  if (envOpenaiKey && envOpenaiKey !== openaiApiKey) {
-    attempts.push({
-      name: 'OpenAI GPT-4o-mini (Env Fallback)',
-      fn: async () => {
-        const response = await axios.post(
-          'https://api.openai.com/v1/chat/completions',
-          {
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: 'You are an accurate fact-checking expert returning JSON.' },
-              { role: 'user', content: prompt }
-            ],
-            response_format: { type: 'json_object' }
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${envOpenaiKey}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        const text = response.data.choices[0].message.content;
-        const parsed = JSON.parse(cleanJsonResponse(text));
-        if (parsed.verdicts && Array.isArray(parsed.verdicts)) return parsed.verdicts;
-        if (Array.isArray(parsed)) return parsed;
-        throw new Error('Invalid JSON structure returned by OpenAI');
-      }
-    });
-  }
-
+  let lastError = null;
   const attemptErrors = [];
+
   for (const attempt of attempts) {
     try {
+      console.log(`Trying verification model: ${attempt.name}...`);
       const verdicts = await attempt.fn();
       if (Array.isArray(verdicts)) {
+        console.log(`Verification success with: ${attempt.name}`);
         return verdicts;
       }
+      console.warn(`[${attempt.name}] Response was not an array, trying next model...`);
     } catch (err) {
-      const errMsg = err.response?.data?.error?.message || err.message;
+      const errMsg = err.message || "Unknown error";
       attemptErrors.push(`${attempt.name} -> ${errMsg}`);
       lastError = err;
+
+      const isQuotaError =
+        errMsg.toLowerCase().includes("quota") ||
+        errMsg.toLowerCase().includes("429") ||
+        errMsg.toLowerCase().includes("exhausted");
+
+      if (isQuotaError) {
+        console.warn(`[${attempt.name}] Quota hit, moving to next model...`);
+        continue;
+      }
     }
   }
 
   if (attemptErrors.length > 0) {
-    const combinedErrors = attemptErrors.map(e => `• ${e}`).join('\n');
-    throw new Error(`AI Batch Claim Verification failed. Detailed operational logs:\n${combinedErrors}\n\n[Action Required]: Please check that your API keys are funded and correct.`);
+    console.warn(`All AI Claim Verification attempts failed. Attempting local heuristic fallback.\nError log:\n${attemptErrors.join('\n')}`);
   }
 
-  throw new Error(`AI Batch Claim Verification failed. No LLM attempts were registered.`);
+  // Heuristic fallback
+  try {
+    const localVerdicts = batchClaims.map((claim, idx) => {
+      const localVerdict = verifyClaimHeuristically(claim, batchSearchResults[idx]);
+      return { claimId: idx, ...localVerdict };
+    });
+    return localVerdicts;
+  } catch (heurErr) {
+    console.error("Heuristic Claim Verification failed:", heurErr);
+  }
+
+  if (lastError) {
+    throw new Error(
+      `AI Batch Claim Verification failed across all models.\n` +
+      `Error log:\n${attemptErrors.map(e => `• ${e}`).join('\n')}\n\n` +
+      `[Action Required]: Your free tier quota may be exhausted for today. ` +
+      `Please wait until midnight (quota resets daily) or use a new API key from https://aistudio.google.com`
+    );
+  }
+
+  throw new Error(`AI Batch Claim Verification failed. No LLM or heuristic attempts were successful.`);
 }
 
 async function generateInsightsWithAI(fileName, trustScore, claims, geminiApiKey, openaiApiKey) {
@@ -242,16 +233,9 @@ export async function verifyClaimsWithAI(claims, geminiApiKey, openaiApiKey, tav
     try {
       batchVerdicts = await verifyClaimBatchWithAI(batchClaims, batchSearchResults, geminiApiKey, openaiApiKey);
     } catch (batchErr) {
-      if (geminiApiKey || openaiApiKey) {
-        const apiErrMsg = batchErr.response?.data?.error?.message || batchErr.message;
-        throw new Error(`AI Claim Verification failed. API Details: ${apiErrMsg}`);
-      }
       batchVerdicts = batchClaims.map((claim, idx) => {
         const localVerdict = verifyClaimHeuristically(claim, batchSearchResults[idx]);
-        return {
-          claimId: idx,
-          ...localVerdict
-        };
+        return { claimId: idx, ...localVerdict };
       });
     }
 
@@ -287,7 +271,7 @@ export async function verifyClaimsWithAI(claims, geminiApiKey, openaiApiKey, tav
     });
 
     if (i + BATCH_SIZE < claims.length) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await wait(3000);
     }
   }
 
@@ -371,7 +355,7 @@ function verifyClaimHeuristically(claim, searchResults) {
   const url = primarySource.url || "https://google.com";
 
   const claimNumbers = claim.match(/\d+(?:\.\d+)?/g);
-  
+
   if (!claimNumbers || claimNumbers.length === 0) {
     const words = claim.toLowerCase().split(/\s+/).filter(w => w.length > 5);
     const matches = words.filter(w => snippet.toLowerCase().includes(w));

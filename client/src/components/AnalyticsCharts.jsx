@@ -2,15 +2,15 @@ import React from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { AlertCircle } from 'lucide-react';
 
-// Custom tooltip shared across components
+// Custom tooltip shared across components (Light theme)
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-neutral-950 border border-neutral-800 p-2.5 rounded-lg text-xs shadow-2xl text-left">
+      <div className="bg-white border border-neutral-200 p-2.5 rounded-lg text-xs shadow-md text-left text-black">
         <span className="font-bold text-neutral-500 block mb-0.5 uppercase tracking-widest text-[9px]">
           {label || payload[0].name}
         </span>
-        <span className="font-extrabold text-white text-sm">
+        <span className="font-extrabold text-black text-sm">
           {payload[0].value} {payload[0].name === 'confidence' ? '%' : payload[0].value === 1 ? 'Claim' : 'Claims'}
         </span>
       </div>
@@ -21,16 +21,16 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 // 1. VerdictPieChart
 export function VerdictPieChart({ chartData }) {
-  // Override colors for monochrome look
-  const monochromeData = chartData.map((item, idx) => {
-    let color = '#ffffff'; // Verified (White)
-    if (item.name === 'Inaccurate') color = '#737373'; // Inaccurate (Medium Gray)
-    if (item.name === 'False') color = '#262626'; // False (Deep Charcoal)
+  // Override colors for vibrant light look matching dashboard cards
+  const vibrantData = chartData.map((item, idx) => {
+    let color = '#4ec590'; // Verified (Mint Green)
+    if (item.name === 'Inaccurate') color = '#ea5586'; // Inaccurate (Pink/Magenta)
+    if (item.name === 'False') color = '#547bf1'; // False (Royal Blue)
     return { ...item, color };
   });
 
   return (
-    <div className="bg-neutral-900 border border-neutral-850 p-5 rounded-2xl shadow-xl text-center flex flex-col justify-between h-[300px]">
+    <div className="bg-white border border-neutral-200 p-5 rounded-2xl shadow-sm text-center flex flex-col justify-between h-[300px] text-black">
       <span className="text-[10px] text-neutral-500 uppercase tracking-widest block font-bold mb-2">
         Claims Verdict Distribution
       </span>
@@ -38,7 +38,7 @@ export function VerdictPieChart({ chartData }) {
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={monochromeData}
+              data={vibrantData}
               cx="50%"
               cy="50%"
               innerRadius={50}
@@ -46,7 +46,7 @@ export function VerdictPieChart({ chartData }) {
               paddingAngle={5}
               dataKey="value"
             >
-              {monochromeData.map((entry, index) => (
+              {vibrantData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
@@ -56,10 +56,10 @@ export function VerdictPieChart({ chartData }) {
       </div>
       {/* Legend */}
       <div className="flex justify-center gap-4 text-xs font-bold">
-        {monochromeData.map((item, idx) => (
+        {vibrantData.map((item, idx) => (
           <div key={idx} className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color, border: item.color === '#ffffff' ? 'none' : '1px solid #404040' }}></div>
-            <span className="text-neutral-450">{item.name} ({item.value})</span>
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }}></div>
+            <span className="text-neutral-600">{item.name} ({item.value})</span>
           </div>
         ))}
       </div>
@@ -69,35 +69,35 @@ export function VerdictPieChart({ chartData }) {
 
 // 2. RiskBarChart
 export function RiskBarChart({ chartData }) {
-  // Override colors for monochrome look
-  const monochromeData = chartData.map((item, idx) => {
-    let color = '#ffffff'; // Low Risk (White)
-    if (item.name === 'Medium Risk') color = '#737373'; // Medium Risk (Medium Gray)
-    if (item.name === 'High Risk') color = '#262626'; // High Risk (Deep Charcoal)
+  // Override colors for vibrant light look
+  const vibrantData = chartData.map((item, idx) => {
+    let color = '#4ec590'; // Low Risk (Mint Green)
+    if (item.name === 'Medium Risk') color = '#ea5586'; // Medium Risk (Pink/Magenta)
+    if (item.name === 'High Risk') color = '#547bf1'; // High Risk (Royal Blue)
     return { ...item, color };
   });
 
   return (
-    <div className="bg-neutral-900 border border-neutral-850 p-5 rounded-2xl shadow-xl text-center flex flex-col justify-between h-[300px]">
+    <div className="bg-white border border-neutral-200 p-5 rounded-2xl shadow-sm text-center flex flex-col justify-between h-[300px] text-black">
       <span className="text-[10px] text-neutral-500 uppercase tracking-widest block font-bold mb-2">
         Risk Classification Profile
       </span>
       <div className="h-44 w-full mt-2">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={monochromeData} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.02)" vertical={false} />
+          <BarChart data={vibrantData} margin={{ top: 5, right: 10, left: -25, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.04)" vertical={false} />
             <XAxis dataKey="name" stroke="#737373" fontSize={10} tickLine={false} axisLine={false} />
             <YAxis stroke="#737373" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(255,255,255,0.01)' }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.02)' }} />
             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-              {monochromeData.map((entry, index) => (
+              {vibrantData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-[10px] text-neutral-500 leading-normal max-w-xs mx-auto font-medium">
+      <p className="text-[10px] text-neutral-500 leading-normal max-w-xs mx-auto font-semibold">
         High-risk claims signify direct contradictions against established public facts.
       </p>
     </div>
@@ -107,29 +107,29 @@ export function RiskBarChart({ chartData }) {
 // 3. ConfidenceLineChart
 export function ConfidenceLineChart({ chartData }) {
   return (
-    <div className="bg-neutral-900 border border-neutral-850 p-5 rounded-2xl shadow-xl text-center h-[260px] flex flex-col justify-between">
+    <div className="bg-white border border-neutral-200 p-5 rounded-2xl shadow-sm text-center h-[260px] flex flex-col justify-between text-black">
       <span className="text-[10px] text-neutral-500 uppercase tracking-widest block font-bold mb-2">
         Audit Confidence Timeline
       </span>
       <div className="h-40 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.02)" />
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.04)" />
             <XAxis dataKey="name" stroke="#737373" fontSize={10} tickLine={false} axisLine={false} />
             <YAxis stroke="#737373" fontSize={10} tickLine={false} axisLine={false} domain={[0, 100]} />
             <Tooltip content={<CustomTooltip />} />
             <Line
               type="monotone"
               dataKey="confidence"
-              stroke="#ffffff"
+              stroke="#547bf1"
               strokeWidth={3}
-              dot={{ r: 4, stroke: '#ffffff', strokeWidth: 1.5, fill: '#000000' }}
+              dot={{ r: 4, stroke: '#547bf1', strokeWidth: 1.5, fill: '#ffffff' }}
               activeDot={{ r: 6 }}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
-      <p className="text-[10px] text-neutral-550 leading-normal font-medium">
+      <p className="text-[10px] text-neutral-500 leading-normal font-semibold">
         Reflects AI model confidence rating across consecutive assertion cross-verifications.
       </p>
     </div>
@@ -139,10 +139,10 @@ export function ConfidenceLineChart({ chartData }) {
 // 4. ProblemAreasList
 export function ProblemAreasList({ areas }) {
   return (
-    <div className="bg-neutral-900 border border-neutral-855 p-5 rounded-2xl shadow-xl text-left">
+    <div className="bg-white border border-neutral-200 p-5 rounded-2xl shadow-sm text-left text-black">
       <div className="flex items-center gap-2 mb-4">
-        <AlertCircle className="h-4.5 w-4.5 text-neutral-450" />
-        <span className="text-[10px] text-neutral-550 uppercase tracking-widest block font-bold">
+        <AlertCircle className="h-4.5 w-4.5 text-[#ea5586]" />
+        <span className="text-[10px] text-neutral-500 uppercase tracking-widest block font-bold">
           Detected Problem Areas
         </span>
       </div>
@@ -152,21 +152,22 @@ export function ProblemAreasList({ areas }) {
           return (
             <div
               key={idx}
-              className="p-3 rounded-xl border border-neutral-850 bg-neutral-950/40 hover:border-neutral-800 flex flex-col justify-between transition-all duration-200"
+              className="p-3 rounded-xl border border-neutral-200 bg-neutral-50 hover:border-neutral-300 flex flex-col justify-between transition-all duration-200"
             >
               <div className="flex items-center justify-between gap-2 mb-2.5">
-                <span className="text-xs font-bold text-white capitalize tracking-wide">
+                <span className="text-xs font-bold text-neutral-800 capitalize tracking-wide">
                   {area.category}
                 </span>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${hasProblems ? 'bg-neutral-800 text-neutral-200' : 'bg-neutral-950 text-neutral-550'
-                  }`}>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                  hasProblems ? 'bg-rose-50 text-rose-700 border border-rose-100' : 'bg-neutral-100 text-neutral-500'
+                }`}>
                   {area.count} {area.count === 1 ? 'Error' : 'Errors'}
                 </span>
               </div>
               {/* Horizontal progress bar */}
-              <div className="w-full bg-neutral-950 border border-neutral-850 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-neutral-200 rounded-full h-1.5 overflow-hidden">
                 <div
-                  className="bg-white h-full rounded-full transition-all duration-500"
+                  className="bg-[#ea5586] h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(area.count * 25, 100)}%` }}
                 ></div>
               </div>

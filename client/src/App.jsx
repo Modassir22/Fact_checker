@@ -220,13 +220,13 @@ export default function App() {
         ) : (
           <div className="py-6 space-y-6 animate-fadeIn">
 
-            <div className="bg-neutral-900 border border-neutral-850 p-4.5 rounded-2xl shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="bg-neutral-50 border border-neutral-200 p-4.5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="bg-neutral-950 p-2.5 rounded-xl text-white border border-neutral-850 shrink-0">
+                <div className="bg-white p-2.5 rounded-xl text-black border border-neutral-200 shrink-0">
                   <FileText className="h-5 w-5" />
                 </div>
                 <div className="text-left">
-                  <h3 className="text-sm font-bold text-white tracking-wide">{verificationData.metadata.fileName}</h3>
+                  <h3 className="text-sm font-bold text-black tracking-wide">{verificationData.metadata.fileName}</h3>
                   <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mt-0.5">
                     Analyzed: {verificationData.metadata.timestamp}
                   </p>
@@ -236,14 +236,14 @@ export default function App() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleExport}
-                  className="flex items-center gap-1.5 bg-white hover:bg-neutral-200 text-black font-bold text-xs px-4 py-2.5 rounded-xl shadow-md transition-all"
+                  className="flex items-center gap-1.5 bg-white hover:bg-neutral-200 text-black border border-neutral-200 font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm transition-all"
                 >
                   <Download className="h-4 w-4" />
                   Export Report
                 </button>
                 <button
                   onClick={handleReset}
-                  className="flex items-center gap-1.5 bg-neutral-950 border border-neutral-850 hover:bg-neutral-900 text-neutral-300 font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm transition-all"
+                  className="flex items-center gap-1.5 bg-white border border-neutral-200 hover:bg-neutral-100 text-neutral-800 font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm transition-all"
                 >
                   <RotateCcw className="h-4 w-4" />
                   Analyze New Document
@@ -253,54 +253,54 @@ export default function App() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-              <div className="bg-neutral-900 border border-neutral-855 rounded-xl p-5 text-white shadow-md flex flex-col justify-between h-[115px]">
-                <div className="flex items-center justify-between opacity-80 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
+              <div className="bg-[#547bf1] border border-[#446ce0] rounded-xl p-5 text-white shadow-md flex flex-col justify-between h-[115px]">
+                <div className="flex items-center justify-between text-white/80 text-[10px] font-bold uppercase tracking-widest">
                   <span>Claims Audited</span>
-                  <FileText className="h-4 w-4" />
+                  <FileText className="h-4 w-4 text-white/90" />
                 </div>
-                <div className="text-3xl font-extrabold tracking-tight">
+                <div className="text-3xl font-extrabold tracking-tight text-white">
                   {verificationData.metadata.totalClaims}
                 </div>
-                <div className="text-[10px] text-neutral-500 font-semibold">
+                <div className="text-[10px] text-white/85 font-semibold">
                   100% extracted from document
                 </div>
               </div>
 
-              <div className="bg-white border border-white rounded-xl p-5 text-black shadow-lg flex flex-col justify-between h-[115px]">
-                <div className="flex items-center justify-between opacity-80 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
+              <div className="bg-[#3db8c5] border border-[#2fa8b5] rounded-xl p-5 text-white shadow-md flex flex-col justify-between h-[115px]">
+                <div className="flex items-center justify-between text-white/80 text-[10px] font-bold uppercase tracking-widest">
                   <span>Verified Claims</span>
-                  <ShieldCheck className="h-4 w-4" />
+                  <ShieldCheck className="h-4 w-4 text-white/90" />
                 </div>
-                <div className="text-3xl font-extrabold tracking-tight text-black">
+                <div className="text-3xl font-extrabold tracking-tight text-white">
                   {verificationData.metadata.verifiedCount}
                 </div>
-                <div className="text-[10px] text-neutral-600 font-semibold">
+                <div className="text-[10px] text-white/85 font-semibold">
                   Supported by trusted web data
                 </div>
               </div>
 
-              <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 text-neutral-300 shadow-md flex flex-col justify-between h-[115px]">
-                <div className="flex items-center justify-between opacity-80 text-[10px] font-bold uppercase tracking-widest text-neutral-500">
+              <div className="bg-[#ea5586] border border-[#d94475] rounded-xl p-5 text-white shadow-md flex flex-col justify-between h-[115px]">
+                <div className="flex items-center justify-between text-white/80 text-[10px] font-bold uppercase tracking-widest">
                   <span>Inaccurate Claims</span>
-                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTriangle className="h-4 w-4 text-white/90" />
                 </div>
                 <div className="text-3xl font-extrabold tracking-tight text-white">
                   {verificationData.metadata.inaccurateCount}
                 </div>
-                <div className="text-[10px] text-neutral-500 font-semibold">
+                <div className="text-[10px] text-white/85 font-semibold">
                   Outdated dates or stats
                 </div>
               </div>
 
-              <div className="bg-neutral-950 border border-neutral-850 rounded-xl p-5 text-neutral-400 shadow-sm flex flex-col justify-between h-[115px]">
-                <div className="flex items-center justify-between opacity-80 text-[10px] font-bold uppercase tracking-widest text-neutral-600">
+              <div className="bg-[#4ec590] border border-[#3db580] rounded-xl p-5 text-white shadow-md flex flex-col justify-between h-[115px]">
+                <div className="flex items-center justify-between text-white/80 text-[10px] font-bold uppercase tracking-widest">
                   <span>False Claims</span>
-                  <XCircle className="h-4 w-4" />
+                  <XCircle className="h-4 w-4 text-white/90" />
                 </div>
-                <div className="text-3xl font-extrabold tracking-tight">
+                <div className="text-3xl font-extrabold tracking-tight text-white">
                   {verificationData.metadata.falseCount}
                 </div>
-                <div className="text-[10px] opacity-75 font-semibold">
+                <div className="text-[10px] text-white/85 font-semibold">
                   Direct contradiction/no evidence
                 </div>
               </div>

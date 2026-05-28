@@ -24,25 +24,25 @@ export default function TrustScoreGauge({ score }) {
     requestAnimationFrame(animate);
   }, [score]);
 
-  // Determine dynamic details based on score (monochrome palette)
-  let strokeColor = '#737373'; // Medium Gray
-  let badgeColor = 'bg-neutral-800 border-neutral-700 text-neutral-200';
+  // Determine dynamic details based on score (vibrant matching palette)
+  let strokeColor = '#547bf1'; // Royal Blue
+  let badgeColor = 'bg-[#547bf1] border-[#446ce0] text-white';
   let verdict = 'Moderate Accuracy';
   let description = 'Key elements require statistical update.';
 
   if (score >= 85) {
-    strokeColor = '#ffffff'; // White
-    badgeColor = 'bg-white border-white text-black';
+    strokeColor = '#4ec590'; // Mint Green
+    badgeColor = 'bg-[#4ec590] border-[#3db580] text-white';
     verdict = 'Verified Integrity';
     description = 'High factual compliance with trusted indices.';
   } else if (score < 70) {
-    strokeColor = '#262626'; // Deep Charcoal
-    badgeColor = 'bg-neutral-950 border-neutral-850 text-neutral-550';
+    strokeColor = '#ea5586'; // Pink/Magenta
+    badgeColor = 'bg-[#ea5586] border-[#d94475] text-white';
     verdict = 'High Factual Risk';
     description = 'Multiple outdated metrics or false assertions detected.';
   } else {
-    strokeColor = '#737373'; // Medium Gray
-    badgeColor = 'bg-neutral-800 border-neutral-700 text-neutral-200';
+    strokeColor = '#547bf1'; // Royal Blue
+    badgeColor = 'bg-[#547bf1] border-[#446ce0] text-white';
     verdict = 'Moderate Discrepancy';
     description = 'Factual claims contain outdated projected values.';
   }
@@ -53,7 +53,7 @@ export default function TrustScoreGauge({ score }) {
   const strokeDashoffset = circumference - (animatedScore / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center justify-center p-6 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-xl text-center h-full min-h-[300px] text-white">
+    <div className="flex flex-col items-center justify-center p-6 bg-white border border-neutral-200 rounded-2xl shadow-sm text-center h-full min-h-[300px] text-black">
 
       <span className="text-[10px] text-neutral-500 uppercase tracking-widest block font-bold mb-4">
         Overall Document Trust Score
@@ -69,7 +69,7 @@ export default function TrustScoreGauge({ score }) {
             cy="60"
             r={radius}
             fill="transparent"
-            stroke="rgba(255, 255, 255, 0.03)"
+            stroke="rgba(0, 0, 0, 0.04)"
             strokeWidth="8"
           />
           {/* Active progress ring */}
@@ -89,7 +89,7 @@ export default function TrustScoreGauge({ score }) {
 
         {/* Centered raw score */}
         <div className="absolute flex flex-col items-center justify-center">
-          <span className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+          <span className="text-3xl md:text-4xl font-extrabold tracking-tight text-black">
             {animatedScore}%
           </span>
         </div>
@@ -97,11 +97,11 @@ export default function TrustScoreGauge({ score }) {
       </div>
 
       {/* Dynamic Status Badge */}
-      <div className={`px-3 py-1 rounded-full text-xs font-bold border uppercase tracking-wider mb-2 ${badgeColor}`}>
+      <div className={`px-3 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider mb-2 ${badgeColor}`}>
         {verdict}
       </div>
 
-      <p className="text-xs text-neutral-400 max-w-[200px] leading-relaxed font-medium">
+      <p className="text-xs text-neutral-500 max-w-[200px] leading-relaxed font-semibold">
         {description}
       </p>
 

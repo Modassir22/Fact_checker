@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 function cleanJsonResponse(rawText) {
   let cleaned = rawText.trim();
@@ -8,9 +8,73 @@ function cleanJsonResponse(rawText) {
   return cleaned;
 }
 
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const FREE_TIER_MODELS = [
+  "gemini-2.5-flash-lite"
+];
+
+async function callGeminiWithSDK(apiKey, prompt, modelName, name) {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const model = genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      maxOutputTokens: 512,
+      temperature: 0.7
+    }
+  });
+
+  const maxRetries = 2;
+  let attempt = 0;
+
+  await wait(3000);
+
+  while (true) {
+    try {
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const rawText = response.text();
+      const cleaned = cleanJsonResponse(rawText);
+
+      let parsed;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (parseErr) {
+        throw new Error(`JSON parse error: ${parseErr.message}. Raw response: ${rawText.slice(0, 200)}`);
+      }
+
+      return parsed;
+
+    } catch (err) {
+      attempt++;
+      const errMsg = err.message || "";
+      console.error(`[${name}] Attempt ${attempt} failed: ${errMsg}`);
+
+      if (errMsg.startsWith("JSON parse error")) {
+        throw err;
+      }
+
+      const isQuotaError =
+        errMsg.toLowerCase().includes("quota") ||
+        errMsg.toLowerCase().includes("429") ||
+        errMsg.toLowerCase().includes("exhausted") ||
+        errMsg.toLowerCase().includes("limit");
+
+      if (isQuotaError && attempt < maxRetries) {
+        console.warn(`[${name}] Quota exceeded. Waiting 60 seconds before retry ${attempt}/${maxRetries}...`);
+        await wait(60000);
+        continue;
+      }
+
+      throw err;
+    }
+  }
+}
+
 export async function extractClaimsWithAI(text, geminiApiKey, openaiApiKey) {
-  if (!geminiApiKey && !openaiApiKey) {
-    throw new Error('LLM API credentials (Gemini or OpenAI key) are required to extract claims from the uploaded file.');
+  const keyToUse = geminiApiKey || process.env.GEMINI_API_KEY;
+  if (!keyToUse) {
+    throw new Error('LLM API credentials (Gemini API Key) are required to extract claims from the uploaded file.');
   }
 
   const prompt = `You are a professional Claim Extraction Engine.
@@ -32,153 +96,80 @@ Example Output:
 
 Text to analyze:
 ---
-${text.slice(0, 20000)}
+${text.slice(0, 15000)}
 ---`;
 
-  let claims = null;
-  let lastError = null;
   const attempts = [];
-
-  if (geminiApiKey) {
-    attempts.push({
-      name: 'Gemini 1.5 Flash (Custom)',
-      fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`;
-        const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }]
-        });
-        const jsonText = response.data.candidates[0].content.parts[0].text;
-        return JSON.parse(cleanJsonResponse(jsonText));
-      }
-    });
-    attempts.push({
-      name: 'Gemini 2.0 Flash (Custom)',
-      fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
-        const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }]
-        });
-        const jsonText = response.data.candidates[0].content.parts[0].text;
-        return JSON.parse(cleanJsonResponse(jsonText));
-      }
-    });
-  }
-
   const envGeminiKey = process.env.GEMINI_API_KEY;
-  if (envGeminiKey && envGeminiKey !== geminiApiKey) {
-    attempts.push({
-      name: 'Gemini 1.5 Flash (Env Fallback)',
-      fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${envGeminiKey}`;
-        const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }]
-        });
-        const jsonText = response.data.candidates[0].content.parts[0].text;
-        return JSON.parse(cleanJsonResponse(jsonText));
-      }
-    });
-    attempts.push({
-      name: 'Gemini 2.0 Flash (Env Fallback)',
-      fn: async () => {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${envGeminiKey}`;
-        const response = await axios.post(url, {
-          contents: [{ parts: [{ text: prompt }] }]
-        });
-        const jsonText = response.data.candidates[0].content.parts[0].text;
-        return JSON.parse(cleanJsonResponse(jsonText));
-      }
-    });
+
+  for (const modelName of FREE_TIER_MODELS) {
+    if (geminiApiKey) {
+      attempts.push({
+        name: `${modelName} (Custom Key)`,
+        fn: () => callGeminiWithSDK(geminiApiKey, prompt, modelName, `${modelName} (Custom Key)`)
+      });
+    }
+    if (envGeminiKey && envGeminiKey !== geminiApiKey) {
+      attempts.push({
+        name: `${modelName} (Env Fallback)`,
+        fn: () => callGeminiWithSDK(envGeminiKey, prompt, modelName, `${modelName} (Env Fallback)`)
+      });
+    }
   }
 
-  if (openaiApiKey) {
-    attempts.push({
-      name: 'OpenAI GPT-4o-mini (Custom)',
-      fn: async () => {
-        const response = await axios.post(
-          'https://api.openai.com/v1/chat/completions',
-          {
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: 'You are a precise claim extractor returning JSON.' },
-              { role: 'user', content: prompt }
-            ],
-            response_format: { type: 'json_object' }
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${openaiApiKey}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        const content = response.data.choices[0].message.content;
-        const parsed = JSON.parse(content.trim());
-        if (Array.isArray(parsed)) return parsed;
-        if (parsed.claims && Array.isArray(parsed.claims)) return parsed.claims;
-        throw new Error('Invalid response structure returned by OpenAI');
-      }
-    });
-  }
-
-  const envOpenaiKey = process.env.OPENAI_API_KEY;
-  if (envOpenaiKey && envOpenaiKey !== openaiApiKey) {
-    attempts.push({
-      name: 'OpenAI GPT-4o-mini (Env Fallback)',
-      fn: async () => {
-        const response = await axios.post(
-          'https://api.openai.com/v1/chat/completions',
-          {
-            model: 'gpt-4o-mini',
-            messages: [
-              { role: 'system', content: 'You are a precise claim extractor returning JSON.' },
-              { role: 'user', content: prompt }
-            ],
-            response_format: { type: 'json_object' }
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${envOpenaiKey}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        const content = response.data.choices[0].message.content;
-        const parsed = JSON.parse(content.trim());
-        if (Array.isArray(parsed)) return parsed;
-        if (parsed.claims && Array.isArray(parsed.claims)) return parsed.claims;
-        throw new Error('Invalid response structure returned by OpenAI');
-      }
-    });
-  }
-
+  let lastError = null;
   const attemptErrors = [];
+
   for (const attempt of attempts) {
     try {
-      claims = await attempt.fn();
+      console.log(`Trying model: ${attempt.name}...`);
+      const claims = await attempt.fn();
       if (Array.isArray(claims)) {
+        console.log(`Success with: ${attempt.name}`);
         return claims;
       }
+      console.warn(`[${attempt.name}] Response was not an array, trying next model...`);
     } catch (err) {
-      const errMsg = err.response?.data?.error?.message || err.message;
+      const errMsg = err.message || "Unknown error";
       attemptErrors.push(`${attempt.name} -> ${errMsg}`);
       lastError = err;
+
+      const isQuotaError =
+        errMsg.toLowerCase().includes("quota") ||
+        errMsg.toLowerCase().includes("429") ||
+        errMsg.toLowerCase().includes("exhausted");
+
+      if (isQuotaError) {
+        console.warn(`[${attempt.name}] Quota hit, moving to next model...`);
+        continue;
+      }
     }
   }
 
   if (attemptErrors.length > 0) {
-    const combinedErrors = attemptErrors.map(e => `• ${e}`).join('\n');
-    throw new Error(`AI Claim Extraction failed. Detailed operational logs:\n${combinedErrors}\n\n[Action Required]: Please verify your keys are funded/valid. Gemini API is highly recommended since Google AI Studio provides a free tier with 15 requests/min without billing.`);
+    console.warn(`All AI attempts failed. Falling back to heuristic extraction.\nError log:\n${attemptErrors.join('\n')}`);
   }
 
   try {
     const localClaims = extractClaimsHeuristically(text);
     if (localClaims && localClaims.length > 0) {
+      console.log(`Heuristic fallback returned ${localClaims.length} claims.`);
       return localClaims;
     }
   } catch (heurErr) {
+    console.error("Heuristic Claim Extraction failed:", heurErr);
   }
 
-  throw new Error(`LLM Factual Claim Extraction failed. Last error: ${lastError ? lastError.message : 'Unknown'}`);
+  if (lastError) {
+    throw new Error(
+      `AI Claim Extraction failed across all models.\n` +
+      `Error log:\n${attemptErrors.map(e => `• ${e}`).join('\n')}\n\n` +
+      `[Action Required]: Your free tier quota may be exhausted for today. ` +
+      `Please wait until midnight (quota resets daily) or use a new API key from https://aistudio.google.com`
+    );
+  }
+
+  throw new Error(`Claim Extraction failed. No AI or heuristic claims could be produced.`);
 }
 
 function extractClaimsHeuristically(text) {
