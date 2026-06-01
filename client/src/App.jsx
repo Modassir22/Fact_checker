@@ -7,7 +7,6 @@ import TrustScoreGauge from './components/TrustScoreGauge';
 import { exportReportToPrint } from './utils/exportReport';
 import { FileText, Download, RotateCcw, ShieldCheck, AlertTriangle, XCircle, Info } from 'lucide-react';
 import SettingsModal from './components/SettingsModal';
-import { Agentation } from 'agentation';
 import { obfuscateKey, deobfuscateKey } from './utils/security';
 
 let backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';
@@ -399,7 +398,6 @@ export default function App() {
         </div>
       )}
 
-      <Agentation />
     </div>
   );
 }
